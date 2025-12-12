@@ -29,11 +29,21 @@
 
       <!-- 단수 카운터 -->
       <div class="counter-section">
-        <h3>단수 카운터</h3>
-        <div class="counter">
-          <button @click="decrementCounter">-</button>
-          <span>{{ currentProject.rowCount }}</span>
-          <button @click="incrementCounter">+</button>
+        <h3>카운터 목록</h3>
+        <div v-if="currentProject.counters && currentProject.counters.length > 0" class="counter-list">
+          <div v-for="counter in currentProject.counters" :key="counter.id" class="counter">
+            <span class="counter-name">{{ counter.name }}</span>
+            <div class="counter-controls">
+              <button @click="decrementCounter(counter.id)">-</button>
+              <span class="counter-value">{{ counter.count }}</span>
+              <button @click="incrementCounter(counter.id)">+</button>
+              <button v-if="counter.isDeletable !== false" @click="deleteCounter(counter.id)" class="btn-small btn-danger">삭제</button>
+            </div>
+          </div>
+        </div>
+        <div class="add-counter">
+          <input v-model="newCounterName" placeholder="새 카운터 이름" @keyup.enter="addCounter" />
+          <button @click="addCounter">카운터 추가</button>
         </div>
       </div>
 
@@ -84,6 +94,7 @@ export default {
       currentProjectId: null,
       newProjectName: '',
       newMemoText: '',
+      newCounterName: '',
       editingMemoId: null, // 현재 수정 중인 메모의 ID
       editingMemoText: '', // 현재 수정 중인 메모의 텍스트
     };
@@ -104,8 +115,10 @@ export default {
       const newProject = {
         id: Date.now(), // 간단한 고유 ID 생성
         name: this.newProjectName.trim(),
-        rowCount: 0,
         image: null,
+        counters: [
+          { id: Date.now(), name: '단수', count: 0, isDeletable: false } // 삭제 불가능한 기본 카운터
+        ],
         memos: [], // memo를 memos 배열로 변경
       };
       this.projects.push(newProject);
@@ -119,17 +132,44 @@ export default {
       // 이 함수는 select의 change 이벤트를 위해 존재합니다.
     },
     // 카운터 증가
-    incrementCounter() {
+    incrementCounter(counterId) {
       if (!this.currentProject) return;
-      this.currentProject.rowCount++;
-      this.saveData();
+      const counter = this.currentProject.counters.find(c => c.id === counterId);
+      if (counter) {
+        counter.count++;
+        this.saveData();
+      }
     },
     // 카운터 감소
-    decrementCounter() {
+    decrementCounter(counterId) {
+      this.saveData();
       if (!this.currentProject) return;
-      if (this.currentProject.rowCount > 0) {
-        this.currentProject.rowCount--;
+      const counter = this.currentProject.counters.find(c => c.id === counterId);
+      if (counter && counter.count > 0) {
+        counter.count--;
         this.saveData();
+      }
+    },
+    addCounter() {
+      if (!this.currentProject || !this.newCounterName.trim()) return;
+      const newCounter = {
+        id: Date.now(),
+        name: this.newCounterName.trim(),
+        count: 0,
+        isDeletable: true, // 사용자가 추가한 카운터는 삭제 가능
+      };
+      this.currentProject.counters.push(newCounter);
+      this.newCounterName = '';
+      this.saveData();
+    },
+    deleteCounter(counterId) {
+      if (!this.currentProject) return;
+      if (confirm('정말로 이 카운터를 삭제하시겠습니까?')) {
+        const index = this.currentProject.counters.findIndex(c => c.id === counterId);
+        if (index > -1) {
+          this.currentProject.counters.splice(index, 1);
+          this.saveData();
+        }
       }
     },
     // 이미지 업로드 처리
@@ -198,6 +238,17 @@ export default {
       const savedProjects = localStorage.getItem('knittingProjects');
       if (savedProjects) {
         this.projects = JSON.parse(savedProjects);
+        // 데이터 구조 마이그레이션 (rowCount -> counters)
+        this.projects.forEach(p => {
+          if (typeof p.rowCount !== 'undefined') {
+            p.counters = [{ id: Date.now(), name: '기본 단수', count: p.rowCount }];
+            delete p.rowCount;
+          }
+          // 기존 프로젝트에 카운터가 없는 경우 기본 카운터 추가
+          if (!p.counters || p.counters.length === 0) {
+            p.counters = [{ id: Date.now(), name: '단수', count: 0, isDeletable: false }];
+          }
+        });
         // 데이터 구조 마이그레이션 (기존 memo -> 신규 memos)
         this.projects.forEach(p => {
           if (p.memo && !p.memos) {
@@ -247,8 +298,14 @@ h1, h2, h3 { text-align: center; }
 .image-preview { max-width: 100%; max-height: 400px; border-radius: 4px; border: 1px solid #ddd; }
 
 /* 카운터 */
-.counter { display: flex; justify-content: center; align-items: center; gap: 20px; font-size: 2em; }
-.counter button { font-size: 1.5em; width: 50px; height: 50px; border-radius: 50%; }
+.counter-list { display: flex; flex-direction: column; gap: 15px; margin-bottom: 15px; }
+.counter { display: flex; justify-content: space-between; align-items: center; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+.counter-name { font-weight: bold; }
+.counter-controls { display: flex; align-items: center; gap: 10px; }
+.counter-controls button { font-size: 1em; width: 30px; height: 30px; border-radius: 50%; }
+.counter-value { font-size: 1.2em; min-width: 30px; text-align: center; }
+.add-counter { display: flex; gap: 10px; }
+.add-counter input { flex-grow: 1; }
 
 /* 메모 */
 .memo-list { border: 1px solid #ddd; border-radius: 4px; padding: 10px; margin-bottom: 10px; max-height: 200px; overflow-y: auto; }
