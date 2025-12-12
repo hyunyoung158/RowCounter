@@ -45,8 +45,6 @@
             기록된 메모가 없습니다.
           </div>
           <div v-for="memo in currentProject.memos" :key="memo.id" class="memo-item">
-            <p class="memo-text">{{ memo.text }}</p>
-            <span class="memo-timestamp">{{ formatTimestamp(memo.timestamp) }}</span>
             <div v-if="editingMemoId === memo.id">
               <textarea v-model="editingMemoText" class="memo-edit-area"></textarea>
               <div class="memo-actions">
@@ -255,11 +253,9 @@ h1, h2, h3 { text-align: center; }
 /* 메모 */
 .memo-list { border: 1px solid #ddd; border-radius: 4px; padding: 10px; margin-bottom: 10px; max-height: 200px; overflow-y: auto; }
 .no-memo { color: #888; text-align: center; padding: 20px 0; }
-.memo-item { border-bottom: 1px solid #eee; padding: 10px 5px; }
 .memo-item { border-bottom: 1px solid #eee; padding: 10px 5px; display: flex; flex-direction: column; }
 .memo-item:last-child { border-bottom: none; }
 .memo-text { margin: 0 0 5px 0; white-space: pre-wrap; /* 줄바꿈 유지 */ }
-.memo-timestamp { font-size: 0.8em; color: #888; }
 .memo-meta { display: flex; justify-content: space-between; align-items: center; }
 .memo-timestamp { font-size: 0.8em; color: #888; flex-grow: 1; }
 .memo-actions { display: flex; gap: 5px; }
