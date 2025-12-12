@@ -1,26 +1,19 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js App"/>
+  <ProjectManager />
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import ProjectManager from './components/ProjectManager.vue'
 
 export default {
   name: 'App',
   components: {
-    HelloWorld
+    ProjectManager
   }
 }
 </script>
 
 <style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
+/* 전역 스타일이 필요하다면 여기에 작성할 수 있습니다. */
+/* 현재는 ProjectManager.vue의 자체 스타일을 사용하도록 비워둡니다. */
 </style>
